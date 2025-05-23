@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "604177949133",
+    "project_id": "immuno-warriors-9e3b1",
+    "storage_bucket": "immuno-warriors-9e3b1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:604177949133:android:4a30d047e33155b008e484",
+        "android_client_info": {
+          "package_name": "com.android.application"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "604177949133-2qoc5oeag9etn297duas8bpv8e8v9dmi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBgrJ2qqnjXp0ibt2_LaHP7KOYXEjW1HUI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "604177949133-2qoc5oeag9etn297duas8bpv8e8v9dmi.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "604177949133-g55u1f22fr868gv6aiu2d21kgih6d9vb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.immunoWarriors"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:604177949133:android:43b29340c80ae5a208e484",
+        "android_client_info": {
+          "package_name": "com.example.immuno_warriors"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "604177949133-2qoc5oeag9etn297duas8bpv8e8v9dmi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBgrJ2qqnjXp0ibt2_LaHP7KOYXEjW1HUI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "604177949133-2qoc5oeag9etn297duas8bpv8e8v9dmi.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "604177949133-g55u1f22fr868gv6aiu2d21kgih6d9vb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.immunoWarriors"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
