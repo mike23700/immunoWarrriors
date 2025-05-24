@@ -2,9 +2,8 @@ import 'dart:ui';
 //import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:immuno_warriors/screens/protectors/protectors.dart';
+import 'package:immuno_warriors/screens/protectors/protectors_screen.dart';
 import 'package:immuno_warriors/screens/scan/scan_screen.dart';
-//import 'package:immuno_warriors/screens/simulation/simulation_screen.dart';
 import 'package:immuno_warriors/screens/lab/lab_screen.dart';
 import 'package:immuno_warriors/screens/archive/archive_screen.dart';
 import 'package:immuno_warriors/screens/gemini/gemini_screen.dart';
@@ -87,7 +86,6 @@ class _HomeScreenState extends State<HomeScreen>
     const Scaffold(body: ScanScreen()),
     const Scaffold(body: LabScreen()),
     const Scaffold(body: ArchiveScreen()),
-    const Scaffold(body: SimulationScreen()),
   ];
 
   double _draggableButtonX = 30.0;
@@ -146,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen>
                   // en ajoutant le delta de déplacement.
 
                   // Assure que le bouton reste dans les limites de l'écran
-                  _draggableButtonX = (_draggableButtonX + details.delta.dx)
+                  _draggableButtonX = (_draggableButtonX - details.delta.dx)
                       .clamp(0.0, screenSize.width - _draggableButtonSize);
                   _draggableButtonY = (_draggableButtonY + details.delta.dy)
                       .clamp(
@@ -167,14 +165,7 @@ class _HomeScreenState extends State<HomeScreen>
                 // Ou réinitialiser sa position si tu veux.
               },
               // Détecte un simple tap sur le bouton
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SimulationScreen(),
-                  ),
-                );
-              },
+              onTap: () {},
               child: FloatingActionButton(
                 onPressed: () {
                   Navigator.push(
@@ -252,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen>
                         color: _selectedIndex == 0 ? neonBlue : Colors.white60,
                       ),
                     ),
-                    label: 'Accueil',
+                    label: 'Home',
                   ),
 
                   BottomNavigationBarItem(

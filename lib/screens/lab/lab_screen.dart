@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:immuno_warriors/screens/lab/labo_screen.dart';
 import 'package:immuno_warriors/theme/app_theme.dart';
 import 'bio_forge_screen.dart';
 
@@ -10,7 +11,8 @@ class LabScreen extends StatefulWidget {
   State<LabScreen> createState() => _LabScreenState();
 }
 
-class _LabScreenState extends State<LabScreen> with SingleTickerProviderStateMixin {
+class _LabScreenState extends State<LabScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _currentIndex = 0;
 
@@ -46,11 +48,9 @@ class _LabScreenState extends State<LabScreen> with SingleTickerProviderStateMix
           Container(
             width: double.infinity,
             height: double.infinity,
-            decoration: BoxDecoration(
-              gradient: AppTheme.backgroundGradient,
-            ),
+            decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
           ),
-          
+
           // Contenu principal
           Column(
             children: [
@@ -59,13 +59,10 @@ class _LabScreenState extends State<LabScreen> with SingleTickerProviderStateMix
                 child: TabBarView(
                   controller: _tabController,
                   physics: const NeverScrollableScrollPhysics(),
-                  children: const [
-                    _LaboratoryContent(),
-                    BioForgeScreen(),
-                  ],
+                  children: const [LaboratoryContent(), BioForgeScreen()],
                 ),
               ),
-              
+
               // Barre de navigation secondaire (positionnée plus haut pour éviter le chevauchement)
               Container(
                 height: 50,
@@ -98,7 +95,7 @@ class _LabScreenState extends State<LabScreen> with SingleTickerProviderStateMix
                   ],
                 ),
               ),
-              
+
               // Espace pour la barre de navigation principale
               const SizedBox(height: 30),
             ],
@@ -140,85 +137,6 @@ class _LabScreenState extends State<LabScreen> with SingleTickerProviderStateMix
               ),
               textAlign: TextAlign.center,
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _LaboratoryContent extends StatelessWidget {
-  const _LaboratoryContent();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Titre
-              Text(
-                'LABORATOIRE D\'ANALYSE',
-                style: GoogleFonts.orbitron(
-                  color: AppTheme.neonGreen,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              
-              const SizedBox(height: 30),
-              
-              // Icône du laboratoire
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [AppTheme.neonGreen, AppTheme.neonBlue],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    ...AppTheme.glowEffect(AppTheme.neonGreen),
-                    BoxShadow(
-                      color: AppTheme.neonBlue.withOpacity(0.5),
-                      blurRadius: 30,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.science_rounded,
-                  color: Colors.white,
-                  size: 50,
-                ),
-              ),
-              
-              const SizedBox(height: 30),
-              
-              // Description
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.0),
-                child: Text(
-                  'Analysez les échantillons et découvrez des informations détaillées sur les agents pathogènes.',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16,
-                    height: 1.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              
-              // Espace pour la barre de navigation secondaire
-              const SizedBox(height: 100),
-            ],
           ),
         ),
       ),

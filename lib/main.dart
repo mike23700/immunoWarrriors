@@ -10,26 +10,28 @@ import 'package:flutter_gemini/flutter_gemini.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   print('Initialisation de Firebase...');
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
     print('Firebase initialisé avec succès');
-    
+
     // Vérifier si un utilisateur est déjà connecté
     final currentUser = FirebaseAuth.instance.currentUser;
-    print('Utilisateur actuel: ${currentUser?.email ?? "Aucun utilisateur connecté"}');
+    print(
+      'Utilisateur actuel: ${currentUser?.email ?? "Aucun utilisateur connecté"}',
+    );
   } catch (e) {
     print('Erreur lors de l\'initialisation de Firebase: $e');
     rethrow;
   }
-  
+
   // Initialiser le fournisseur de profil utilisateur
   final userProfileProvider = UserProfileProvider();
   userProfileProvider.initialize();
-  
+
   // Initialise Gemini avant de lancer l'app
   Gemini.init(apiKey: 'AIzaSyA-gHjd_eYu7hAdorkfGAZglJIO9RmD6k0');
 
@@ -58,7 +60,10 @@ class MyApp extends StatelessWidget {
         builder: (context, snapshot) {
           // Mettre à jour le fournisseur de profil utilisateur
           if (snapshot.connectionState == ConnectionState.active) {
-            final userProfileProvider = Provider.of<UserProfileProvider>(context, listen: false);
+            final userProfileProvider = Provider.of<UserProfileProvider>(
+              context,
+              listen: false,
+            );
             userProfileProvider.initialize().then((_) {
               // La mise à jour du fournisseur est terminée
               print('Changement d\'état d\'authentification détecté');
@@ -67,30 +72,33 @@ class MyApp extends StatelessWidget {
               print('Error: ${snapshot.error}');
             });
           }
-          
+
           if (snapshot.connectionState == ConnectionState.waiting) {
             print('En attente de la vérification de l\'authentification...');
             return const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
+              body: Center(child: CircularProgressIndicator()),
             );
           }
-          
+
           if (snapshot.hasData) {
             // User is logged in
             print('Utilisateur connecté: ${snapshot.data?.email}');
             // Initialiser le fournisseur de profil utilisateur
-            final userProfileProvider = Provider.of<UserProfileProvider>(context, listen: false);
+            final userProfileProvider = Provider.of<UserProfileProvider>(
+              context,
+              listen: false,
+            );
             // Utiliser then pour gérer l'initialisation asynchrone
             userProfileProvider.initialize().then((_) {
               print('Profil utilisateur initialisé');
             });
             return const HomeScreen();
           }
-          
+
           // User is not logged in
-          print('Aucun utilisateur connecté, affichage de l\'écran de connexion');
+          print(
+            'Aucun utilisateur connecté, affichage de l\'écran de connexion',
+          );
           return const LoginScreen();
         },
       ),
