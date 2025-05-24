@@ -6,15 +6,19 @@ class AppTheme {
   static const Color darkBackground = Color(0xFF0A0A1A);
   static const Color cardBackground = Color(0xFF1A1A2E);
   static const Color cardSurface = Color(0xFF242538);
-  
+
   // Couleurs néon
   static const Color neonBlue = Color(0xFF00F7FF);
   static const Color neonPink = Color(0xFFFF00F5);
   static const Color neonPurple = Color(0xFFB400FF);
   static const Color neonGreen = Color(0xFF00FF75);
-  
+
   // Effet de lueur pour les éléments interactifs
-  static List<BoxShadow> glowEffect(Color color, {double spread = 2.0, double blur = 8.0}) {
+  static List<BoxShadow> glowEffect(
+    Color color, {
+    double spread = 2.0,
+    double blur = 8.0,
+  }) {
     return [
       BoxShadow(
         color: color.withOpacity(0.4),
@@ -28,7 +32,7 @@ class AppTheme {
       ),
     ];
   }
-  
+
   // Styles de texte
   static TextStyle get headingStyle => GoogleFonts.orbitron(
     color: Colors.white,
@@ -36,27 +40,27 @@ class AppTheme {
     fontWeight: FontWeight.bold,
     letterSpacing: 1.5,
   );
-  
+
   static TextStyle get subtitleStyle => GoogleFonts.rajdhani(
     color: Colors.white70,
     fontSize: 16,
     fontWeight: FontWeight.w500,
     letterSpacing: 0.5,
   );
-  
+
   static TextStyle get cardTitleStyle => GoogleFonts.rajdhani(
     color: Colors.white,
     fontSize: 18,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.5,
   );
-  
+
   static TextStyle get cardSubtitleStyle => GoogleFonts.rajdhani(
     color: Colors.white70,
     fontSize: 14,
     fontWeight: FontWeight.w400,
   );
-  
+
   // Thème de l'application
   static ThemeData get darkTheme {
     return ThemeData(
@@ -86,7 +90,7 @@ class AppTheme {
         titleTextStyle: headingStyle.copyWith(fontSize: 22),
         iconTheme: const IconThemeData(color: neonBlue, size: 28),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: cardBackground,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -129,26 +133,23 @@ class AppTheme {
       ),
     );
   }
-  
+
   // Dégradés courants
   static LinearGradient get bluePinkGradient => const LinearGradient(
-        colors: [neonBlue, neonPink],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
-      
+    colors: [neonBlue, neonPink],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   static LinearGradient get purplePinkGradient => const LinearGradient(
-        colors: [neonPurple, neonPink],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
-      
+    colors: [neonPurple, neonPink],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   static LinearGradient get backgroundGradient => LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          darkBackground.withOpacity(0.8),
-          darkBackground,
-        ],
-      );
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [darkBackground.withOpacity(0.8), darkBackground],
+  );
 }
