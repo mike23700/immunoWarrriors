@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -89,7 +90,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: List.generate(3, (index) {
                   return GestureDetector(
                     onTap: () {
-                      context.read<UserProfileProvider>().selectDefaultAvatar(index);
+                      context.read<UserProfileProvider>().selectDefaultAvatar(
+                        index,
+                      );
                       Navigator.pop(context);
                     },
                     child: Container(
@@ -99,9 +102,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: context.watch<UserProfileProvider>().userProfile?.defaultAvatarIndex == index
-                              ? AppTheme.neonBlue
-                              : Colors.transparent,
+                          color:
+                              context
+                                          .watch<UserProfileProvider>()
+                                          .userProfile
+                                          ?.defaultAvatarIndex ==
+                                      index
+                                  ? AppTheme.neonBlue
+                                  : Colors.transparent,
                           width: 2,
                         ),
                       ),
@@ -121,7 +129,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       },
     );
   }
-
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -144,6 +151,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       await context.read<UserProfileProvider>().signOut();
       if (!mounted) return;
+
+      //modification du statut en ligne de firestore a false
+      await FirebaseAuth.instance.signOut();
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(
+            FirebaseAuth.instance.currentUser!.uid,
+          ) // Note: currentUser peut être null ici si signOut est déjà appelé
+          .update({'isOnline': false});
+
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -169,17 +186,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (context, userProvider, _) {
         final userProfile = userProvider.userProfile;
         final user = FirebaseAuth.instance.currentUser;
-        
+
         if (userProfile == null || user == null) {
           return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+            body: Center(child: CircularProgressIndicator()),
           );
         }
 
         return Scaffold(
           backgroundColor: AppTheme.darkBackground,
+
           body: Stack(
             children: [
               // Fond avec effet de dégradé
@@ -190,329 +206,373 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   gradient: AppTheme.backgroundGradient,
                 ),
               ),
-              
+
               // Contenu principal
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // En-tête avec bouton de retour
-                      Row(
-                        children: [
-                          // Bouton de retour
-                          GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.black26,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: AppTheme.neonBlue.withOpacity(0.5),
-                                  width: 1,
-                                ),
-                                boxShadow: AppTheme.glowEffect(AppTheme.neonBlue),
-                              ),
-                              child: const Icon(
-                                Icons.arrow_back_ios_new_rounded,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                          const Spacer(),
-                          // Titre
-                          Text(
-                            'PROFIL',
-                            style: GoogleFonts.orbitron(
-                              color: AppTheme.neonBlue,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 2,
-                              shadows: AppTheme.glowEffect(AppTheme.neonBlue),
-                            ),
-                          ),
-                          const Spacer(),
-                          // Bouton de déconnexion
-                          GestureDetector(
-                            onTap: _signOut,
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.red.withOpacity(0.5),
-                                  width: 1,
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.logout_rounded,
-                                color: Colors.red,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 30),
-                      
-                      // Section Photo de profil et nom
-                      Center(
-                        child: Column(
+              SingleChildScrollView(
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // En-tête avec bouton de retour
+                        Row(
                           children: [
-                            // Photo de profil
+                            // Bouton de retour
                             GestureDetector(
-                              onTap: _showImageSourceDialog,
-                              child: Stack(
-                                children: [
-                                  // Photo de profil
-                                  Container(
-                                    width: 120,
-                                    height: 120,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      gradient: const LinearGradient(
-                                        colors: [AppTheme.neonBlue, AppTheme.neonPink],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      boxShadow: [
-                                        ...AppTheme.glowEffect(AppTheme.neonBlue),
-                                        BoxShadow(
-                                          color: AppTheme.neonPink.withOpacity(0.5),
-                                          blurRadius: 20,
-                                          spreadRadius: 2,
-                                        ),
-                                      ],
-                                    ),
-                                    child: ClipOval(
-                                      child: userProfile.photoUrl != null && userProfile.photoUrl!.isNotEmpty
-                                          ? Image.network(
-                                              userProfile.photoUrl!,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (context, error, stackTrace) {
-                                                return _buildDefaultAvatar(userProfile);
-                                              },
-                                            )
-                                          : _buildDefaultAvatar(userProfile),
-                                    ),
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.black26,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: AppTheme.neonBlue.withOpacity(0.5),
+                                    width: 1,
                                   ),
-                                  // Icône d'édition
-                                  Positioned(
-                                    bottom: 0,
-                                    right: 0,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black87,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: AppTheme.neonBlue,
-                                          width: 2,
-                                        ),
-                                      ),
-                                      child: const Icon(
-                                        Icons.edit_rounded,
-                                        color: AppTheme.neonBlue,
-                                        size: 16,
-                                      ),
-                                    ),
+                                  boxShadow: AppTheme.glowEffect(
+                                    AppTheme.neonBlue,
                                   ),
-                                ],
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_back_ios_new_rounded,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
                               ),
                             ),
-                            
-                            const SizedBox(height: 20),
-                            
-                            // Nom d'utilisateur
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (_isEditing) ...[
-                                  SizedBox(
-                                    width: 200,
-                                    child: TextField(
-                                      controller: _nameController,
-                                      style: GoogleFonts.rajdhani(
-                                        color: Colors.white,
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.bold,
+                            const Spacer(),
+                            // Titre
+                            Text(
+                              'PROFIL',
+                              style: GoogleFonts.orbitron(
+                                color: AppTheme.neonBlue,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 2,
+                                shadows: AppTheme.glowEffect(AppTheme.neonBlue),
+                              ),
+                            ),
+                            const Spacer(),
+                            // Bouton de déconnexion
+                            GestureDetector(
+                              onTap: _signOut,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.red.withOpacity(0.5),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.logout_rounded,
+                                  color: Colors.red,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 30),
+
+                        // Section Photo de profil et nom
+                        Center(
+                          child: Column(
+                            children: [
+                              // Photo de profil
+                              GestureDetector(
+                                onTap: _showImageSourceDialog,
+                                child: Stack(
+                                  children: [
+                                    // Photo de profil
+                                    Container(
+                                      width: 120,
+                                      height: 120,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: const LinearGradient(
+                                          colors: [
+                                            AppTheme.neonBlue,
+                                            AppTheme.neonPink,
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                        boxShadow: [
+                                          ...AppTheme.glowEffect(
+                                            AppTheme.neonBlue,
+                                          ),
+                                          BoxShadow(
+                                            color: AppTheme.neonPink
+                                                .withOpacity(0.5),
+                                            blurRadius: 20,
+                                            spreadRadius: 2,
+                                          ),
+                                        ],
                                       ),
-                                      textAlign: TextAlign.center,
-                                      decoration: InputDecoration(
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(10),
-                                          borderSide: BorderSide(
-                                            color: AppTheme.neonBlue,
-                                            width: 1,
-                                          ),
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(10),
-                                          borderSide: BorderSide(
-                                            color: AppTheme.neonBlue.withOpacity(0.5),
-                                            width: 1,
-                                          ),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(10),
-                                          borderSide: BorderSide(
+                                      child: ClipOval(
+                                        child:
+                                            userProfile.photoUrl != null &&
+                                                    userProfile
+                                                        .photoUrl!
+                                                        .isNotEmpty
+                                                ? Image.network(
+                                                  userProfile.photoUrl!,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (
+                                                    context,
+                                                    error,
+                                                    stackTrace,
+                                                  ) {
+                                                    return _buildDefaultAvatar(
+                                                      userProfile,
+                                                    );
+                                                  },
+                                                )
+                                                : _buildDefaultAvatar(
+                                                  userProfile,
+                                                ),
+                                      ),
+                                    ),
+                                    // Icône d'édition
+                                    Positioned(
+                                      bottom: 0,
+                                      right: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black87,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
                                             color: AppTheme.neonBlue,
                                             width: 2,
                                           ),
                                         ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  GestureDetector(
-                                    onTap: () async {
-                                      if (_nameController.text.trim().isNotEmpty) {
-                                        await userProvider.updateDisplayName(_nameController.text.trim());
-                                        setState(() {
-                                          _isEditing = false;
-                                        });
-                                        if (!mounted) return;
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              'Nom mis à jour avec succès',
-                                              style: GoogleFonts.rajdhani(),
-                                            ),
-                                            backgroundColor: Colors.green,
-                                          ),
-                                        );
-                                      }
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.green.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: Colors.green,
-                                          width: 1,
+                                        child: const Icon(
+                                          Icons.edit_rounded,
+                                          color: AppTheme.neonBlue,
+                                          size: 16,
                                         ),
                                       ),
-                                      child: const Icon(
-                                        Icons.check_rounded,
-                                        color: Colors.green,
-                                        size: 20,
-                                      ),
                                     ),
-                                  ),
-                                ] else ...[
-                                  Text(
-                                    userProfile.displayName,
-                                    style: GoogleFonts.orbitron(
-                                      color: Colors.white,
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1.5,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        _isEditing = true;
-                                      });
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black26,
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: AppTheme.neonBlue.withOpacity(0.5),
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: Icon(
-                                        Icons.edit_rounded,
-                                        color: AppTheme.neonBlue,
-                                        size: 16,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            
-                            // Email
-                            const SizedBox(height: 8),
-                            Text(
-                              user.email ?? 'Aucun email',
-                              style: GoogleFonts.rajdhani(
-                                color: Colors.white70,
-                                fontSize: 16,
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 30),
-                      
-                      // Section Paramètres
-                      Text(
-                        'PARAMÈTRES',
-                        style: GoogleFonts.rajdhani(
-                          color: AppTheme.neonPink,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      
-                      // Carte des paramètres
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(15),
-                        decoration: BoxDecoration(
-                          color: Colors.black26,
-                          borderRadius: BorderRadius.circular(15),
-                          border: Border.all(
-                            color: AppTheme.neonBlue.withOpacity(0.3),
-                            width: 1,
+
+                              const SizedBox(height: 20),
+
+                              // Nom d'utilisateur
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (_isEditing) ...[
+                                    SizedBox(
+                                      width: 200,
+                                      child: TextField(
+                                        controller: _nameController,
+                                        style: GoogleFonts.rajdhani(
+                                          color: Colors.white,
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                        decoration: InputDecoration(
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 10,
+                                                vertical: 5,
+                                              ),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: AppTheme.neonBlue,
+                                              width: 1,
+                                            ),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: AppTheme.neonBlue
+                                                  .withOpacity(0.5),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: AppTheme.neonBlue,
+                                              width: 2,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    GestureDetector(
+                                      onTap: () async {
+                                        if (_nameController.text
+                                            .trim()
+                                            .isNotEmpty) {
+                                          await userProvider.updateDisplayName(
+                                            _nameController.text.trim(),
+                                          );
+                                          setState(() {
+                                            _isEditing = false;
+                                          });
+                                          if (!mounted) return;
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                'Nom mis à jour avec succès',
+                                                style: GoogleFonts.rajdhani(),
+                                              ),
+                                              backgroundColor: Colors.green,
+                                            ),
+                                          );
+                                        }
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.green,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.check_rounded,
+                                          color: Colors.green,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ),
+                                  ] else ...[
+                                    Text(
+                                      userProfile.displayName,
+                                      style: GoogleFonts.orbitron(
+                                        color: Colors.white,
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1.5,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _isEditing = true;
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black26,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          border: Border.all(
+                                            color: AppTheme.neonBlue
+                                                .withOpacity(0.5),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.edit_rounded,
+                                          color: AppTheme.neonBlue,
+                                          size: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+
+                              // Email
+                              const SizedBox(height: 8),
+                              Text(
+                                user.email ?? 'Aucun email',
+                                style: GoogleFonts.rajdhani(
+                                  color: Colors.white70,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        child: Column(
-                          children: [
-                            _buildSettingItem(
-                              icon: Icons.notifications_rounded,
-                              title: 'Notifications',
-                              onTap: () {},
-                            ),
-                            const Divider(color: Colors.white10, height: 30),
-                            _buildSettingItem(
-                              icon: Icons.security_rounded,
-                              title: 'Confidentialité',
-                              onTap: () {},
-                            ),
-                            const Divider(color: Colors.white10, height: 30),
-                            _buildSettingItem(
-                              icon: Icons.help_rounded,
-                              title: 'Aide & Support',
-                              onTap: () {},
-                            ),
-                            const Divider(color: Colors.white10, height: 30),
-                            _buildSettingItem(
-                              icon: Icons.info_rounded,
-                              title: 'À propos',
-                              onTap: () {},
-                            ),
-                          ],
+
+                        const SizedBox(height: 30),
+
+                        // Section Paramètres
+                        Text(
+                          'PARAMÈTRES',
+                          style: GoogleFonts.rajdhani(
+                            color: AppTheme.neonPink,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 15),
+
+                        // Carte des paramètres
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(15),
+                          decoration: BoxDecoration(
+                            color: Colors.black26,
+                            borderRadius: BorderRadius.circular(15),
+                            border: Border.all(
+                              color: AppTheme.neonBlue.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              _buildSettingItem(
+                                icon: Icons.notifications_rounded,
+                                title: 'Notifications',
+                                onTap: () {},
+                              ),
+                              const Divider(color: Colors.white10, height: 30),
+                              _buildSettingItem(
+                                icon: Icons.security_rounded,
+                                title: 'Confidentialité',
+                                onTap: () {},
+                              ),
+                              const Divider(color: Colors.white10, height: 30),
+                              _buildSettingItem(
+                                icon: Icons.help_rounded,
+                                title: 'Aide & Support',
+                                onTap: () {},
+                              ),
+                              const Divider(color: Colors.white10, height: 30),
+                              _buildSettingItem(
+                                icon: Icons.info_rounded,
+                                title: 'À propos',
+                                onTap: () {},
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -541,11 +601,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 color: AppTheme.neonBlue.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
-                icon,
-                color: AppTheme.neonBlue,
-                size: 22,
-              ),
+              child: Icon(icon, color: AppTheme.neonBlue, size: 22),
             ),
             const SizedBox(width: 15),
             Text(
@@ -576,10 +632,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         fit: BoxFit.cover,
       );
     }
-    return Icon(
-      Icons.person_rounded,
-      color: Colors.white,
-      size: 50,
-    );
+    return Icon(Icons.person_rounded, color: Colors.white, size: 50);
   }
 }

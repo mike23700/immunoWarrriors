@@ -1,8 +1,11 @@
 import 'dart:ui';
 //import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:immuno_warriors/screens/protectors/protectors_screen.dart';
+import 'package:immuno_warriors/main.dart';
+import 'package:immuno_warriors/screens/lab/bio_forge_screen.dart';
 import 'package:immuno_warriors/screens/scan/scan_screen.dart';
 import 'package:immuno_warriors/screens/lab/lab_screen.dart';
 import 'package:immuno_warriors/screens/archive/archive_screen.dart';
@@ -10,6 +13,9 @@ import 'package:immuno_warriors/screens/gemini/gemini_screen.dart';
 import 'package:immuno_warriors/screens/shop/shop_screen.dart';
 import 'package:immuno_warriors/screens/settings/settings_screen.dart';
 import 'package:immuno_warriors/screens/simulation/simulation_screen.dart';
+
+//l'utilisateur actuel
+final userAuth = FirebaseAuth.instance.currentUser;
 
 // Neon color palette
 const Color neonBlue = Color(0xFF00F7FF);
@@ -68,7 +74,7 @@ BoxDecoration backgroundGradient = BoxDecoration(
 );
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -82,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   final List<Widget> _screens = [
     const HomeContent(),
-    const Scaffold(body: ProtectorsScreen()),
+    const Scaffold(body: BioForgeScreen(protectors: true)),
     const Scaffold(body: ScanScreen()),
     const Scaffold(body: LabScreen()),
     const Scaffold(body: ArchiveScreen()),
@@ -92,6 +98,7 @@ class _HomeScreenState extends State<HomeScreen>
   double _draggableButtonY = 155.0;
   final double _draggableButtonSize = 60.0;
   late Positioned draggrableButton;
+  late final MyObserver _appLifecycleObserver;
 
   @override
   void initState() {
@@ -104,10 +111,31 @@ class _HomeScreenState extends State<HomeScreen>
     _animation = Tween<double>(begin: 0.95, end: 1.05).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
+
+    // Initialisez l'observateur
+    _appLifecycleObserver = MyObserver();
+    // Ajoutez l'observateur au WidgetsBinding
+    WidgetsBinding.instance.addObserver(_appLifecycleObserver);
+
+    // Mettre à jour le statut 'isOnline' à true au démarrage/connexion
+    // Assurez-vous que l'utilisateur est connecté ici
+    if (userAuth != null) {
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(userAuth?.uid)
+          .update({'isOnline': true})
+          .catchError((error) {
+            print(
+              'Erreur lors de la mise à jour du statut en ligne au démarrage: $error',
+            );
+          });
+    }
   }
 
   @override
   void dispose() {
+    // Très important: supprimez l'observateur lorsque le widget est disposé
+    WidgetsBinding.instance.removeObserver(_appLifecycleObserver);
     _animationController.dispose();
     super.dispose();
   }

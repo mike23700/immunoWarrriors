@@ -6,7 +6,8 @@ class UserProfile {
   String displayName;
   String email;
   String? photoUrl;
-  int defaultAvatarIndex; // Index de l'avatar par défaut (0-2) ou -1 si photo personnalisée
+  int
+  defaultAvatarIndex; // Index de l'avatar par défaut (0-2) ou -1 si photo personnalisée
 
   UserProfile({
     required this.uid,
@@ -25,12 +26,12 @@ class UserProfile {
         'email': email,
         'defaultAvatarIndex': defaultAvatarIndex,
       };
-      
+
       // Ne pas ajouter photoUrl s'il est null
       if (photoUrl != null && photoUrl!.isNotEmpty) {
         map['photoUrl'] = photoUrl;
       }
-      
+
       if (kDebugMode) {
         print('Conversion en Map réussie: $map');
       }
@@ -58,7 +59,8 @@ class UserProfile {
   factory UserProfile.fromFirebaseUser(User user) {
     return UserProfile(
       uid: user.uid,
-      displayName: user.displayName ?? user.email?.split('@')[0] ?? 'Utilisateur',
+      displayName:
+          user.displayName ?? user.email?.split('@')[0] ?? 'Utilisateur',
       email: user.email ?? '',
       photoUrl: user.photoURL,
     );
@@ -88,5 +90,4 @@ class UserProfile {
       defaultAvatarIndex: defaultAvatarIndex ?? this.defaultAvatarIndex,
     );
   }
-
 }

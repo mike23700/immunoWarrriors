@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:immuno_warriors/screens/lab/bio_forge_screen.dart';
 import 'package:immuno_warriors/screens/lab/labo_screen.dart';
 import 'package:immuno_warriors/theme/app_theme.dart';
-import 'bio_forge_screen.dart';
 
 class LabScreen extends StatefulWidget {
   const LabScreen({super.key});
@@ -59,7 +59,10 @@ class _LabScreenState extends State<LabScreen>
                 child: TabBarView(
                   controller: _tabController,
                   physics: const NeverScrollableScrollPhysics(),
-                  children: const [LaboratoryContent(), BioForgeScreen()],
+                  children: const [
+                    LaboScreen(),
+                    BioForgeScreen(protectors: false),
+                  ],
                 ),
               ),
 

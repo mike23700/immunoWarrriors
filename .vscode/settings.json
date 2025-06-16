@@ -1,3 +1,4 @@
 {
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "cmake.sourceDirectory": "/home/ubuntu/myProgs/mobile/flutter/progs_G1_218/immunoWarrriors/linux"
 }

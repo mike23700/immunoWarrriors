@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:immuno_warriors/models/caracter_model.dart';
 import 'package:provider/provider.dart';
 import 'package:immuno_warriors/firebase_options.dart';
 import 'package:immuno_warriors/providers/user_profile_provider.dart';
@@ -23,6 +25,14 @@ void main() async {
     print(
       'Utilisateur actuel: ${currentUser?.email ?? "Aucun utilisateur connecté"}',
     );
+
+    // --- APPEL DE LA FONCTION D'INITIALISATION ---
+    // Vous pouvez ajouter une condition pour n'exécuter ceci qu'en mode DEBUG
+    // ou seulement la première fois que l'application est lancée (via SharedPreferences par exemple)
+    // Pour le test, nous allons l'appeler directement.
+    // Assurez-vous de commenter ou supprimer cette ligne pour la production !
+    //await FirestoreInitializer().initializeCharacters();
+    // ------------------------------------------
   } catch (e) {
     print('Erreur lors de l\'initialisation de Firebase: $e');
     rethrow;
@@ -103,5 +113,33 @@ class MyApp extends StatelessWidget {
         },
       ),
     );
+  }
+}
+
+// Dans votre Widget (souvent dans le Stateful Widget principal ou un wrapper)
+class MyObserver extends WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      // L'application est en arrière-plan ou sur le point de se fermer
+      // Mettre à jour le statut 'isOnline' à false
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+          'isOnline': false,
+        });
+      }
+    } else if (state == AppLifecycleState.resumed) {
+      // L'application est revenue au premier plan
+      // Mettre à jour le statut 'isOnline' à true
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+          'isOnline': true,
+        });
+      }
+    }
   }
 }

@@ -2,12 +2,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:immuno_warriors/screens/auth/login_screen.dart';
 import 'package:immuno_warriors/screens/home/home_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:immuno_warriors/models/user_model.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({Key? key}) : super(key: key);
+  const RegisterScreen({super.key});
 
   @override
-  _RegisterScreenState createState() => _RegisterScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
@@ -25,15 +27,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       print('Validation du formulaire échouée');
       return;
     }
-    
+
     final password = _passwordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
-    
+
     if (password != confirmPassword) {
       print('Les mots de passe ne correspondent pas');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Les mots de passe ne correspondent pas')),
+          const SnackBar(
+            content: Text('Les mots de passe ne correspondent pas'),
+          ),
         );
       }
       return;
@@ -47,14 +51,49 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final email = _emailController.text.trim();
       print('Tentative d\'inscription avec Firebase');
       print('Email: $email');
-      
-      final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      
+
+      final userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
       print('Inscription réussie: ${userCredential.user?.email}');
       print('UID de l\'utilisateur: ${userCredential.user?.uid}');
+
+      //lecture de tous les agent et initialisation de leurs listes
+      final protectorsLen = 8;
+      final pathogenesLen = 8;
+      List<Map<String, int>> protectors = List.generate(
+        protectorsLen,
+        (int i) => {'id': i, 'progress': 4, 'quantity': 10},
+      );
+      List<Map<String, int>> pathogenes = List.generate(
+        pathogenesLen,
+        (int i) => {'id': i, 'progress': 0, 'quantity': 0},
+      );
+      //pour les 2 premiers pathogenes
+      for (int i = 0; i < 2; i++) {
+        pathogenes[i]['progress'] = 4; // On initialise le progrès à 4
+        pathogenes[i]['quantity'] = 10; // On initialise la quantité à 10
+      }
+
+      //ajout de l'utilisateur a firestore avec le meme id du profil
+      final docRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user?.uid ?? '');
+      final AppUser user = AppUser(
+        id: userCredential.user?.uid ?? '',
+        email: email,
+        isOnline: true,
+        displayName: email.split('@')[0],
+        createdAt: DateTime.now(),
+        lastLoginAt: DateTime.now(),
+        gameData: {
+          'coin': 1000,
+          'grade': 2,
+          'protectors': protectors,
+          'pathogenes': pathogenes,
+        },
+      );
+      print(user.toMap());
+      await docRef.set(user.toMap());
 
       if (mounted) {
         // Fermer tous les écrans et naviguer vers HomeScreen
@@ -63,16 +102,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
           MaterialPageRoute(builder: (_) => const HomeScreen()),
           (Route<dynamic> route) => false,
         );
-        
+
         // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Inscription réussie !')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Inscription réussie !')));
       }
     } on FirebaseAuthException catch (e) {
       print('Erreur Firebase: ${e.code} - ${e.message}');
-      String message = 'Une erreur est survenue lors de l\'inscription. Veuillez réessayer.';
-      
+      String message =
+          'Une erreur est survenue lors de l\'inscription. Veuillez réessayer.';
+
       switch (e.code) {
         case 'email-already-in-use':
           message = 'Un compte existe déjà avec cet email.';
@@ -84,7 +124,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           message = 'L\'inscription par email/mot de passe n\'est pas activée.';
           break;
         case 'weak-password':
-          message = 'Le mot de passe est trop faible. Il doit contenir au moins 6 caractères.';
+          message =
+              'Le mot de passe est trop faible. Il doit contenir au moins 6 caractères.';
           break;
         case 'too-many-requests':
           message = 'Trop de tentatives. Veuillez réessayer plus tard.';
@@ -92,7 +133,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         default:
           message = 'Erreur lors de l\'inscription: ${e.message}';
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -142,8 +183,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.black.withOpacity(0.5),  // Réduit l'opacité pour mieux voir l'image
-                Colors.black.withOpacity(0.7),  // Réduit l'opacité pour mieux voir l'image
+                Colors.black.withOpacity(
+                  0.5,
+                ), // Réduit l'opacité pour mieux voir l'image
+                Colors.black.withOpacity(
+                  0.7,
+                ), // Réduit l'opacité pour mieux voir l'image
               ],
             ),
           ),
@@ -256,7 +301,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             onPressed: () {
                               setState(() {
-                                _obscureConfirmPassword = !_obscureConfirmPassword;
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword;
                               });
                             },
                           ),
@@ -284,16 +330,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               borderRadius: BorderRadius.circular(25),
                             ),
                           ),
-                          child: _isLoading
-                              ? const CircularProgressIndicator(color: Colors.white)
-                              : const Text(
-                                  'S\'INSCRIRE',
-                                  style: TextStyle(
+                          child:
+                              _isLoading
+                                  ? const CircularProgressIndicator(
                                     color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                                  )
+                                  : const Text(
+                                    'S\'INSCRIRE',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
                         ),
                       ),
                       const SizedBox(height: 16),
