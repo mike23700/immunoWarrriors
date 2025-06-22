@@ -2,13 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:immuno_warriors/models/caracter_model.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
 import 'package:immuno_warriors/firebase_options.dart';
 import 'package:immuno_warriors/providers/user_profile_provider.dart';
 import 'package:immuno_warriors/screens/auth/auth.dart'; // Exporte LoginScreen
 import 'package:immuno_warriors/screens/home/home_screen.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
+import 'package:provider/provider.dart' as provider;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,9 +46,11 @@ void main() async {
   Gemini.init(apiKey: 'AIzaSyA-gHjd_eYu7hAdorkfGAZglJIO9RmD6k0');
 
   runApp(
-    ChangeNotifierProvider.value(
-      value: userProfileProvider,
-      child: const MyApp(),
+    riverpod.ProviderScope(
+      child: provider.ChangeNotifierProvider.value(
+        value: userProfileProvider,
+        child: const MyApp(),
+      ),
     ),
   );
 }
@@ -70,10 +72,8 @@ class MyApp extends StatelessWidget {
         builder: (context, snapshot) {
           // Mettre à jour le fournisseur de profil utilisateur
           if (snapshot.connectionState == ConnectionState.active) {
-            final userProfileProvider = Provider.of<UserProfileProvider>(
-              context,
-              listen: false,
-            );
+            final userProfileProvider = provider
+                .Provider.of<UserProfileProvider>(context, listen: false);
             userProfileProvider.initialize().then((_) {
               // La mise à jour du fournisseur est terminée
               print('Changement d\'état d\'authentification détecté');
@@ -94,10 +94,8 @@ class MyApp extends StatelessWidget {
             // User is logged in
             print('Utilisateur connecté: ${snapshot.data?.email}');
             // Initialiser le fournisseur de profil utilisateur
-            final userProfileProvider = Provider.of<UserProfileProvider>(
-              context,
-              listen: false,
-            );
+            final userProfileProvider = provider
+                .Provider.of<UserProfileProvider>(context, listen: false);
             // Utiliser then pour gérer l'initialisation asynchrone
             userProfileProvider.initialize().then((_) {
               print('Profil utilisateur initialisé');

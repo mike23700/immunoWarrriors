@@ -1,35 +1,46 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:immuno_warriors/models/caracter_model.dart';
 import 'package:immuno_warriors/models/user_model.dart';
+import 'package:immuno_warriors/providers/app_user_provider.dart';
 import 'package:immuno_warriors/screens/home/home_screen.dart';
 import 'package:immuno_warriors/screens/lab/labo_screen.dart';
-import 'package:immuno_warriors/widgets/characters_listener.dart';
+import 'package:immuno_warriors/theme/app_theme.dart';
 import 'package:immuno_warriors/widgets/custom_button.dart';
 
-class BioForgeScreen extends StatefulWidget {
-  final bool protectors;
-  const BioForgeScreen({required this.protectors, super.key});
+class BioForgeScreen extends ConsumerWidget {
+  final bool areProtectors;
+  const BioForgeScreen({required this.areProtectors, super.key});
 
   @override
-  State<BioForgeScreen> createState() => _BioForgeScreen();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userAsyncValue = ref.watch(userDocumentProvider(userAuth!.uid));
 
-class _BioForgeScreen extends State<BioForgeScreen> {
-  @override
-  Widget build(BuildContext context) {
-    return CharactersListener(
-      (List<ProgressAppCharacter> pChars) {
-        return CharacterSliderPage(characters: pChars);
-      },
-      protectors: widget.protectors,
-      onlyComplete: true,
+    return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
+      body: userAsyncValue.when(
+        error:
+            (err, stack) => Center(
+              child: Text(
+                'Erreur: $err',
+                style: const TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
+              ),
+            ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        data: (user) {
+          return CharacterSliderPage(
+            characters: getUserAppCharacters(user, areProtectors, true),
+          );
+        },
+      ),
     );
   }
 }
 
 class CharacterSliderPage extends StatefulWidget {
-  final List<AppCharacter> characters;
+  final List<UserAppCharacter> characters;
   const CharacterSliderPage({required this.characters, super.key});
 
   @override
@@ -100,6 +111,7 @@ class _CharacterSliderPageState extends State<CharacterSliderPage> {
             },
           ),
         ),
+
         // Indicateurs de pages
         Padding(
           padding: const EdgeInsets.all(16.0),
@@ -128,7 +140,7 @@ class _CharacterSliderPageState extends State<CharacterSliderPage> {
 }
 
 class CharacterCard extends StatelessWidget {
-  final AppCharacter character;
+  final UserAppCharacter character;
 
   const CharacterCard({required this.character, super.key});
 
@@ -144,9 +156,9 @@ class CharacterCard extends StatelessWidget {
             as Map<String, dynamic>,
       );
       //on arrete tout s'il ne peux pas payer la forge
-      if (user.gameData?['coin'] < character.cost) return;
+      if (user.gameData?['coins'] < character.cost) return;
       //on met a jour la somme du joueur et la quantite pour cette agent
-      user.gameData?['coin'] -= character.cost;
+      user.gameData?['coins'] -= character.cost;
 
       // Vérification de l'existence des clés avant modification
       if (user.gameData?['pathogenes'] != null &&
@@ -183,7 +195,7 @@ class CharacterCard extends StatelessWidget {
         return buildCharacterInfoPopup(
           context: dialogContext,
           character: character,
-          quantity: 1,
+          quantity: character.quantity,
           onActionPressed: () => _build(dialogContext),
           actionButtonText: 'forger',
         );
@@ -232,7 +244,7 @@ class CharacterCard extends StatelessWidget {
             textIconButton(
               () => _showCharacterDetails(context),
               Icons.build,
-              '+10 forger',
+              '+${character.quantity} forger',
             ),
           ],
         ),

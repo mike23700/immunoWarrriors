@@ -61,7 +61,7 @@ class _LabScreenState extends State<LabScreen>
                   physics: const NeverScrollableScrollPhysics(),
                   children: const [
                     LaboScreen(),
-                    BioForgeScreen(protectors: false),
+                    BioForgeScreen(areProtectors: false),
                   ],
                 ),
               ),

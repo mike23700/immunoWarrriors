@@ -62,15 +62,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final pathogenesLen = 8;
       List<Map<String, int>> protectors = List.generate(
         protectorsLen,
-        (int i) => {'id': i, 'progress': 4, 'quantity': 10},
+        (int i) => {'id': i, 'progression': 4, 'quantity': 10},
       );
       List<Map<String, int>> pathogenes = List.generate(
         pathogenesLen,
-        (int i) => {'id': i, 'progress': 0, 'quantity': 0},
+        (int i) => {'id': i, 'progression': 0, 'quantity': 0},
       );
       //pour les 2 premiers pathogenes
       for (int i = 0; i < 2; i++) {
-        pathogenes[i]['progress'] = 4; // On initialise le progrès à 4
+        pathogenes[i]['progression'] = 4; // On initialise le progrès à 4
         pathogenes[i]['quantity'] = 10; // On initialise la quantité à 10
       }
 
@@ -86,7 +86,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         createdAt: DateTime.now(),
         lastLoginAt: DateTime.now(),
         gameData: {
-          'coin': 1000,
+          'coins': 1000,
           'grade': 2,
           'protectors': protectors,
           'pathogenes': pathogenes,

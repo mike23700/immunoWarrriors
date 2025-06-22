@@ -248,7 +248,7 @@ class _ScanScreenState extends State<ScanScreen> {
         userData['gameData'] as Map<String, dynamic>?;
 
     final int grade = gameData?['grade'] as int? ?? 0;
-    final int coin = gameData?['coin'] as int? ?? 0;
+    final int coins = gameData?['coins'] as int? ?? 0;
     final int reward = (grade / 2).toInt();
     final String displayName = userData['displayName'] as String? ?? 'N/A';
 
@@ -278,7 +278,7 @@ class _ScanScreenState extends State<ScanScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                'Coins: $coin',
+                'Coins: $coins',
                 style: const TextStyle(color: Colors.white70),
               ),
             ],

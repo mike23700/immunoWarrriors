@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AppUser {
+  static const keyId = 'id';
+
   final bool isOnline;
   final String id;
   final String email;

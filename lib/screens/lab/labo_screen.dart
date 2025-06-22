@@ -1,42 +1,51 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:immuno_warriors/models/caracter_model.dart';
 import 'package:immuno_warriors/models/user_model.dart';
+import 'package:immuno_warriors/providers/app_user_provider.dart';
 import 'package:immuno_warriors/screens/home/home_screen.dart';
-import 'package:immuno_warriors/widgets/characters_listener.dart';
+import 'package:immuno_warriors/theme/app_theme.dart';
 import 'package:immuno_warriors/widgets/custom_button.dart';
 
-class LaboScreen extends StatefulWidget {
+class LaboScreen extends ConsumerWidget {
   const LaboScreen({super.key});
 
   @override
-  State<LaboScreen> createState() => _LaboScreen();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userAsyncValue = ref.watch(userDocumentProvider(userAuth!.uid));
 
-class _LaboScreen extends State<LaboScreen> {
-  @override
-  Widget build(BuildContext context) {
-    return CharactersListener(
-      (List<ProgressAppCharacter> pChars) {
-        List<SearchCard> searchCards = [];
+    return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
+      body: userAsyncValue.when(
+        error:
+            (err, stack) => Center(
+              child: Text(
+                'Erreur: $err',
+                style: const TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
+              ),
+            ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        data: (user) {
+          List<SearchCard> searchCards = [];
 
-        for (var sChar in pChars) {
-          searchCards.add(SearchCard(searchCharacter: sChar));
-        }
+          for (var sChar in getUserAppCharacters(user, false, false)) {
+            searchCards.add(SearchCard(searchCharacter: sChar));
+          }
 
-        return SingleChildScrollView(
-          child: SafeArea(child: Column(children: searchCards)),
-        );
-      },
-      protectors: false,
-      onlyComplete: false,
+          return SingleChildScrollView(
+            child: SafeArea(child: Column(children: searchCards)),
+          );
+        },
+      ),
     );
   }
 }
 
 class SearchCard extends StatefulWidget {
-  final ProgressAppCharacter searchCharacter;
+  final UserAppCharacter searchCharacter;
   const SearchCard({super.key, required this.searchCharacter});
 
   @override
@@ -45,19 +54,19 @@ class SearchCard extends StatefulWidget {
 
 class _SearchCard extends State<SearchCard> {
   final level = [0.0, 0.25, 0.50, 0.75, 1.0];
-  int get progress => widget.searchCharacter.getProgress();
+  int get progression => widget.searchCharacter.progression;
   //on calcule le cout de la progression
   int get upgradeCost =>
       (widget.searchCharacter.cost *
-              (level[progress == widget.searchCharacter.progressLimit
-                      ? progress
-                      : progress + 1] -
-                  level[progress]))
+              (level[progression == widget.searchCharacter.progressLimit
+                      ? progression
+                      : progression + 1] -
+                  level[progression]))
           .toInt();
 
   Future<void> _upgrade() async {
     try {
-      //on progress si possible
+      //on progression si possible
       if (widget.searchCharacter.progress()) {
         //on recupere l'utilisateur depuis firestore
         AppUser user = AppUser.fromMap(
@@ -69,11 +78,11 @@ class _SearchCard extends State<SearchCard> {
               as Map<String, dynamic>,
         );
         //on arrete tout s'il ne peux pas payer l'evolution
-        if (user.gameData?['coin'] < upgradeCost) return;
+        if (user.gameData?['coins'] < upgradeCost) return;
         //on met a jour la somme du jouer et la progression pour ce pathogene
-        user.gameData?['coin'] -= upgradeCost;
-        user.gameData?['pathogenes'][widget.searchCharacter.id]['progress'] =
-            progress;
+        user.gameData?['coins'] -= upgradeCost;
+        user.gameData?['pathogenes'][widget.searchCharacter.id]['progression'] =
+            progression;
         user.gameData?['pathogenes'][widget.searchCharacter.id]['quantity'] = 3;
         //operation
         await FirebaseFirestore.instance
@@ -99,7 +108,7 @@ class _SearchCard extends State<SearchCard> {
         return buildCharacterInfoPopup(
           context: dialogContext,
           character: widget.searchCharacter,
-          quantity: 1,
+          quantity: widget.searchCharacter.quantity,
           onActionPressed: () {
             _upgrade();
             Navigator.of(dialogContext).pop();
@@ -176,7 +185,7 @@ class _SearchCard extends State<SearchCard> {
                       ),
                     ),
                     LinearProgressIndicator(
-                      value: level[progress],
+                      value: level[progression],
                       backgroundColor: neonBlue.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(3),
                       color: Colors.lightBlue,
@@ -309,7 +318,7 @@ Widget buildCharacterInfoPopup({
             const Icon(Icons.numbers, color: Colors.blue, size: 16),
             const SizedBox(width: 8),
             Text(
-              'Quantité: ${quantity}',
+              'Quantité: $quantity',
               style: const TextStyle(color: Colors.white70),
             ),
           ],

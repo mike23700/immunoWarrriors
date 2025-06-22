@@ -3,8 +3,12 @@ import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:immuno_warriors/main.dart';
+import 'package:immuno_warriors/models/caracter_model.dart';
+import 'package:immuno_warriors/models/user_model.dart';
+import 'package:immuno_warriors/providers/app_user_provider.dart';
 import 'package:immuno_warriors/screens/lab/bio_forge_screen.dart';
 import 'package:immuno_warriors/screens/scan/scan_screen.dart';
 import 'package:immuno_warriors/screens/lab/lab_screen.dart';
@@ -88,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   final List<Widget> _screens = [
     const HomeContent(),
-    const Scaffold(body: BioForgeScreen(protectors: true)),
+    const BioForgeScreen(areProtectors: true),
     const Scaffold(body: ScanScreen()),
     const Scaffold(body: LabScreen()),
     const Scaffold(body: ArchiveScreen()),
@@ -160,18 +164,9 @@ class _HomeScreenState extends State<HomeScreen>
             right: _draggableButtonX,
             top: _draggableButtonY,
             child: GestureDetector(
-              // Détecte le début du glissement
-              onPanStart: (details) {
-                // Optionnel: stocker le point de départ du glissement
-                // pour des calculs plus complexes si nécessaire.
-              },
-              // Détecte le mouvement de glissement
+              onPanStart: (details) {},
               onPanUpdate: (details) {
                 setState(() {
-                  // Met à jour les coordonnées X et Y du bouton
-                  // en ajoutant le delta de déplacement.
-
-                  // Assure que le bouton reste dans les limites de l'écran
                   _draggableButtonX = (_draggableButtonX - details.delta.dx)
                       .clamp(0.0, screenSize.width - _draggableButtonSize);
                   _draggableButtonY = (_draggableButtonY + details.delta.dy)
@@ -182,28 +177,52 @@ class _HomeScreenState extends State<HomeScreen>
                             AppBar().preferredSize.height -
                             MediaQuery.of(context).padding.top,
                       );
-                  // On soustrait la hauteur de l'AppBar et la barre de statut
-                  // pour que le bouton ne dépasse pas le bas de l'écran visible.
                 });
               },
-              // Détecte la fin du glissement (quand le doigt est levé)
-              onPanEnd: (details) {
-                // Optionnel: Tu peux ajouter ici une logique pour "ancrer" le bouton
-                // à un bord de l'écran s'il est proche, par exemple.
-                // Ou réinitialiser sa position si tu veux.
-              },
-              // Détecte un simple tap sur le bouton
+              onPanEnd: (details) {},
               onTap: () {},
-              child: FloatingActionButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SimulationScreen(),
+              child: ScaleTransition(
+                scale: _animation,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [neonBlue, neonPurple],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                  );
-                },
-                child: const Icon(Icons.view_in_ar_rounded),
+                    boxShadow: [
+                      BoxShadow(
+                        color: neonBlue.withOpacity(0.6),
+                        blurRadius: 18,
+                        spreadRadius: 2,
+                      ),
+                      BoxShadow(
+                        color: neonPurple.withOpacity(0.3),
+                        blurRadius: 32,
+                        spreadRadius: 8,
+                      ),
+                    ],
+                  ),
+                  child: FloatingActionButton(
+                    heroTag: 'simuBtn',
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SimulationScreen(),
+                        ),
+                      );
+                    },
+                    child: const Icon(
+                      Icons.videogame_asset_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -447,8 +466,35 @@ Widget _buildHeaderButton(
   );
 }
 
-class HomeContent extends StatelessWidget {
-  const HomeContent({Key? key}) : super(key: key);
+class HomeContent extends ConsumerWidget {
+  const HomeContent({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userAsyncValue = ref.watch(userDocumentProvider(userAuth!.uid));
+
+    return Scaffold(
+      body: userAsyncValue.when(
+        error:
+            (err, stack) => Center(
+              child: Text(
+                'Erreur 1: $err',
+                style: const TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
+              ),
+            ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        data: (user) {
+          return HomeContentView(user);
+        },
+      ),
+    );
+  }
+}
+
+class HomeContentView extends StatelessWidget {
+  final AppUser user;
+  const HomeContentView(this.user, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -467,46 +513,97 @@ class HomeContent extends StatelessWidget {
                   vertical: 20,
                 ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Boutons en haut à droite
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Bouton Paramètres
-                        _buildHeaderButton(
-                          context,
-                          icon: Icons.settings_rounded,
-                          color: neonBlue,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const SettingsScreen(),
+                        // Grade & Coins HUD
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.35),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: neonBlue.withOpacity(0.3),
+                              width: 1,
+                            ),
+                            boxShadow: glowEffect(neonBlue.withOpacity(0.15)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.star, color: Colors.amber, size: 18),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${user.gameData?['grade'] ?? 0}',
+                                style: GoogleFonts.orbitron(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  letterSpacing: 1.2,
+                                ),
                               ),
-                            );
-                          },
+                              const SizedBox(width: 14),
+                              Icon(
+                                Icons.monetization_on,
+                                color: neonGreen,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${user.gameData?['coins'] ?? 0}',
+                                style: GoogleFonts.orbitron(
+                                  color: neonGreen,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(width: 12),
-                        // Bouton Boutique
-                        _buildHeaderButton(
-                          context,
-                          icon: Icons.shopping_cart_rounded,
-                          color: neonPink,
-                          onTap: () {
-                            Navigator.push(
+                        // Boutons à droite
+                        Row(
+                          children: [
+                            _buildHeaderButton(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => const ShopScreen(),
-                              ),
-                            );
-                          },
+                              icon: Icons.settings_rounded,
+                              color: neonBlue,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => const SettingsScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(width: 12),
+                            _buildHeaderButton(
+                              context,
+                              icon: Icons.shopping_cart_rounded,
+                              color: neonPink,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const ShopScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    // Titre "IMMUNOWARRIORS"
-                    Container(
-                      alignment: Alignment.center,
+                    const SizedBox(height: 16),
+                    // Titre centré sous la row
+                    Center(
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
@@ -521,6 +618,8 @@ class HomeContent extends StatelessWidget {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 10),
+                    // ...le reste du code...
                   ],
                 ),
               ),
